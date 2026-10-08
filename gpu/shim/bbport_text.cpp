@@ -617,7 +617,7 @@ constexpr Entry kEntries[] = {
 
 constexpr const char* kCodes[LanguageCount] = {"en", "ru", "de", "fr", "es", "it", "zh"};
 constexpr const char* kNames[LanguageCount] = {"English", "Русский", "Deutsch", "Français",
-                                               "Español", "Italiano", "简体中文"};
+                                               "Español", "Italiano", "Chinese"};
 
 int Clamp(int language) {
     return language >= 0 && language < LanguageCount ? language : English;
