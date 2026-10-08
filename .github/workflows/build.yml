@@ -53,6 +53,11 @@ jobs:
       - name: Build bb-probe.exe
         run: bash build.sh
 
+      - name: Strip debug info (same as the official package)
+        run: |
+          llvm-strip --strip-debug out/bb-probe.exe
+          ls -la out/bb-probe.exe
+
       - name: List output
         run: ls -la out/
 
