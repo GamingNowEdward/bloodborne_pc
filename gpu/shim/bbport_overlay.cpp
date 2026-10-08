@@ -16,7 +16,7 @@
 #include "video_core/renderer_vulkan/vk_instance.h"
 #include "video_core/renderer_vulkan/vk_scheduler.h"
 
-// DejaVu Sans (Cyrillic), embedded (third_party/fonts, Bitstream Vera license).
+// Noto Sans SC (CJK), embedded (third_party/fonts, SIL OFL license).
 #ifdef _WIN32
 asm(".section .rdata,\"dr\"\n"
     ".balign 16\n"
@@ -161,20 +161,20 @@ void Menu() {
                             ImGuiCond_Appearing);
     ImGui::SetNextWindowSize(ImVec2(620.0f * base_scale, 0.0f), ImGuiCond_Appearing);
     bool keep_open = true;
-    if (!ImGui::Begin("Bloodborne — настройки  (Insert / L3+R3)", &keep_open,
+    if (!ImGui::Begin("Bloodborne — 设置  (Insert / L3+R3)", &keep_open,
                       ImGuiWindowFlags_NoCollapse)) {
         ImGui::End();
         return;
     }
-    ImGui::Text("%.0f FPS  (%.1f мс)", frame_ms_avg > 0.0f ? 1000.0f / frame_ms_avg : 0.0f,
+    ImGui::Text("%.0f FPS  (%.1f 毫秒)", frame_ms_avg > 0.0f ? 1000.0f / frame_ms_avg : 0.0f,
                 frame_ms_avg);
 
-    ImGui::SeparatorText("Временной апскейлер");
-    static const char* upscalers[] = {"Выкл", "FSR 3.1", "FSR 4 (INT8)", "FSR 4.1.1 (INT8)",
-                                     "TAA (нативное сглаживание)", "DLSS (NVIDIA RTX)"};
+    ImGui::SeparatorText("时域超分");
+    static const char* upscalers[] = {"关闭", "FSR 3.1", "FSR 4 (INT8)", "FSR 4.1.1 (INT8)",
+                                     "TAA (原生抗锯齿)", "DLSS (NVIDIA RTX)"};
     static const char* later[] = {"XeSS"};
     int upscaler = s.upscaler;
-    if (ImGui::BeginCombo("Апскейлер", upscalers[upscaler])) {
+    if (ImGui::BeginCombo("超分方式", upscalers[upscaler])) {
         for (int i = 0; i < BbSettings::UpscalerCount; ++i) {
             const bool supported = i == BbSettings::UpscalerFsr4 ? s.fsr4_supported.load()
                 : i == BbSettings::UpscalerFsr411 ? s.fsr411_supported.load()
@@ -186,7 +186,7 @@ void Menu() {
             ImGui::EndDisabled();
             if (!supported) {
                 ImGui::SameLine();
-                ImGui::TextDisabled("— не поддерживается видеокартой");
+                ImGui::TextDisabled("— 显卡不支持");
             }
         }
         for (const char* name : later) {
@@ -194,7 +194,7 @@ void Menu() {
             ImGui::Selectable(name, false);
             ImGui::EndDisabled();
             ImGui::SameLine();
-            ImGui::TextDisabled("— в работе");
+            ImGui::TextDisabled("— 开发中");
         }
         ImGui::EndCombo();
     }
@@ -203,25 +203,25 @@ void Menu() {
     }
     if (const char* problem = s.fsr4_problem.load()) {
         ImGui::PushTextWrapPos();
-        ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.3f, 1.0f), "FSR 4 недоступен: %s", problem);
+        ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.3f, 1.0f), "FSR 4 不可用: %s", problem);
         if (!BbSettings::IsFsr4(s.upscaler))
-            ImGui::TextUnformatted("Активен режим, выбранный выше. FSR 4 можно выбрать снова.");
+            ImGui::TextUnformatted("当前仍使用上面所选的方式。之后可以重新选择 FSR 4。");
         ImGui::PopTextWrapPos();
     }
     if (BbSettings::IsFsr4(s.upscaler)) {
         if (s.upscaler == BbSettings::UpscalerFsr411) {
-            Hint("FSR 4.1.1 в режиме INT8: модель из DLL AMD 4.1.1, воспроизведённая в Vulkan "
-                 "(результат совпадает с DLL). Одна модель для Native..Performance и отдельная "
-                 "для Ultra Performance. Ассеты: tools/fsr4cap/build_assets.sh (нужны DLL и Proton).");
+            Hint("FSR 4.1.1 INT8 模式:模型取自 AMD 4.1.1 的 DLL,在 Vulkan 中复现"
+                 "(输出与 DLL 完全一致)。Native 到 Performance 共用一个模型, "
+                 "Ultra Performance 另有一个。资源:tools/fsr4cap/build_assets.sh (需要 DLL 和 Proton)。");
         } else {
-            Hint("FSR 4 в режиме INT8 (модель v07 из исходников AMD FidelityFX SDK). Качество выше, "
-                 "чем у FSR 3.1, но проход тяжелее. Смена пресета пересобирает модель (короткая "
-                 "пауза). Ассеты: tools/fetch_fsr4_assets.sh.");
+            Hint("FSR 4 INT8 模式 (模型 v07 来自 AMD FidelityFX SDK 源码)。画质高于 "
+                 "FSR 3.1,但开销更大。切换预设会重建模型 (短暂"
+                 "停顿)。资源:tools/fetch_fsr4_assets.sh。");
         }
-        Checkbox("FSR 4: авто-экспозиция", s.fsr4_auto_exposure);
-        Checkbox("FSR 4: обратный знак jitter", s.fsr4_invert_jitter);
-        Hint("Проверка при гостинге: сеть FSR 4 нормирует цвет по экспозиции и по ней решает, "
-             "когда отбросить прошлые кадры. Меняются сразу, без перезапуска.");
+        Checkbox("FSR 4: 自动曝光", s.fsr4_auto_exposure);
+        Checkbox("FSR 4: 反转 jitter 符号", s.fsr4_invert_jitter);
+        Hint("拖影检查:FSR 4 网络按曝光归一化颜色,并据此决定"
+             "何时丢弃历史帧。立即生效,无需重启。");
     }
     const bool upscaler_on = s.upscaler != BbSettings::UpscalerOff;
     const bool taa = s.upscaler == BbSettings::UpscalerTaa;
@@ -231,12 +231,12 @@ void Menu() {
     char preset_label[64];
     std::snprintf(preset_label, sizeof(preset_label), "%s (x%.1f)", BbSettings::PresetName(preset),
                   BbSettings::PresetScale(preset));
-    if (ImGui::BeginCombo("Пресет", preset_label)) {
+    if (ImGui::BeginCombo("预设", preset_label)) {
         for (int i = 0; i < BbSettings::PresetCount; ++i) {
             char label[64];
             const float scale = BbSettings::PresetScale(i);
             const int output = s.output_res;
-            std::snprintf(label, sizeof(label), "%s (x%.1f, рендер %dx%d)",
+            std::snprintf(label, sizeof(label), "%s (x%.1f, 渲染 %dx%d)",
                           BbSettings::PresetName(i), scale,
                           int(std::lround(BbSettings::OutputWidths[output] / scale / 2) * 2),
                           int(std::lround(BbSettings::OutputHeights[output] / scale / 2) * 2));
@@ -248,71 +248,71 @@ void Menu() {
     }
     ImGui::EndDisabled();
     if (taa) {
-        ImGui::TextWrapped("TAA сглаживает сцену в разрешении вывода, без модели FSR и апскейлинга. "
-                           "Сохранённый пресет FSR восстановится при выборе FSR.");
+        ImGui::TextWrapped("TAA 在输出分辨率下对画面做抗锯齿,不使用 FSR 模型,也不做超分。"
+                           "切回 FSR 时会恢复之前保存的 FSR 预设。");
     }
-    ImGui::Text("Активный рендер сцены: %d x %d", s.active_render_width.load(),
+    ImGui::Text("当前场景渲染: %d x %d", s.active_render_width.load(),
                 s.active_render_height.load());
     if (BbSettings::FixedRenderSession()) {
-        ImGui::Text("Пресет при запуске: %s", BbSettings::PresetName(s.startup_preset));
+        ImGui::Text("启动时预设: %s", BbSettings::PresetName(s.startup_preset));
         if (const char* automatic = std::getenv("BB_AUTO_RENDER_RES");
             automatic && automatic[0] == '1') {
-            Hint("При выводе не 1080p вся игра рисуется в разрешении пресета (патч при запуске): "
-                 "это быстрее всего на Steam Deck и слабых GPU. Смена пресета или разрешения "
-                 "вывода — после перезапуска. Пункт «Смена разрешения на лету» ниже включает "
-                 "смену без перезапуска (постобработка тогда остаётся в 1080p, медленнее).");
+            Hint("输出不是 1080p 时,整个游戏按预设分辨率渲染 (启动时打补丁):"
+                 "这在 Steam Deck 和低端显卡上速度最快。更换预设或输出"
+                 "分辨率需要重启。打开下面的“实时切换分辨率”可以"
+                 "免重启切换 (此时后处理保持 1080p,速度较慢)。");
         } else {
-            Hint("BB_RENDER_RES фиксирует размер сцены при запуске. Уберите эту явную переменную "
-                 "для смены разрешения и пресетов без перезапуска игры.");
+            Hint("BB_RENDER_RES 会在启动时固定场景分辨率。移除这个显式变量即可"
+                 "在不重启游戏的情况下切换分辨率和预设。");
         }
     } else {
-        Hint("Native AA: FSR работает как сглаживание. Остальные пресеты уменьшают разрешение "
-             "отрисовки сцены относительно вывода. Интерфейс рисуется в разрешении вывода. "
-             "Пресет применяется со следующего кадра без перезапуска игры.");
+        Hint("Native AA:FSR 仅作抗锯齿。其余预设会相对输出降低场景的"
+             "渲染分辨率。界面按输出分辨率绘制。"
+             "预设从下一帧生效,无需重启游戏。");
     }
-    Checkbox("Резкость (RCAS)", s.sharpen);
+    Checkbox("锐化 (RCAS)", s.sharpen);
     ImGui::BeginDisabled(!s.sharpen);
-    Slider("Сила резкости", s.sharpness, 0.0f, 2.0f);
-    Hint("До 1 — резкость самого апскейлера (RCAS). Выше 1 добавляется ещё один проход RCAS. "
-         "Ctrl+клик по ползунку — ввести точное значение.");
+    Slider("锐化强度", s.sharpness, 0.0f, 2.0f);
+    Hint("不超过 1 时使用超分器自带的锐化 (RCAS);高于 1 会额外追加一遍 RCAS。"
+         "Ctrl+点击滑条可输入精确数值。");
     ImGui::EndDisabled();
-    Checkbox("Субпиксельный сдвиг (jitter)", s.jitter);
-    Hint("Каждый кадр сцена сдвигается на долю пикселя, и апскейлер собирает из нескольких "
-         "кадров больше деталей. Без него получается только сглаживание по истории.");
+    Checkbox("子像素抖动 (jitter)", s.jitter);
+    Hint("每帧都将场景偏移不到一个像素,超分器便可从多帧中累积更多"
+         "细节。不启用时只剩下基于历史帧的抗锯齿。");
 
-    ImGui::SeparatorText("Маска реактивности");
+    ImGui::SeparatorText("反应性遮罩");
     ImGui::BeginDisabled(taa);
-    Checkbox("Включить маску", s.reactive);
-    Hint("Помечает прозрачные эффекты (частицы, дымку), чтобы апскейлер меньше опирался на "
-         "прошлые кадры. Меньше шлейфов за эффектами, но под ними возвращается дрожание.");
+    Checkbox("启用遮罩", s.reactive);
+    Hint("标记透明特效 (粒子、烟雾),让超分器减少对历史帧"
+         "的依赖。特效后的拖影更少,但特效区域会出现闪烁。");
     ImGui::BeginDisabled(!s.reactive);
-    Slider("Масштаб", s.reactive_scale, 0.0f, 4.0f);
-    Slider("Порог", s.reactive_threshold, 0.0f, 1.0f);
-    Slider("Максимум", s.reactive_max, 0.0f, 1.0f);
+    Slider("缩放", s.reactive_scale, 0.0f, 4.0f);
+    Slider("阈值", s.reactive_threshold, 0.0f, 1.0f);
+    Slider("上限", s.reactive_max, 0.0f, 1.0f);
     bool show_mask = s.debug_view == BbSettings::DebugReactive;
-    if (ImGui::Checkbox("Показать маску (отладка)", &show_mask)) {
+    if (ImGui::Checkbox("显示遮罩 (调试)", &show_mask)) {
         s.debug_view = show_mask ? BbSettings::DebugReactive : BbSettings::DebugNone;
     }
     ImGui::EndDisabled();
     ImGui::EndDisabled();
-    Checkbox("Векторы движения персонажей", s.object_motion);
-    Hint("Точные векторы для анимированных объектов: одежда и оружие меньше рассыпаются "
-         "при движении. Статичная сцена не получает дополнительный проход. "
-         "Изменение применяется после перезапуска игры.");
+    Checkbox("物体运动矢量", s.object_motion);
+    Hint("为动画物体提供精确矢量:衣服和武器在运动中更少出现"
+         "破碎。静态场景不会产生额外开销。"
+         "修改将在重启游戏后生效。");
     bool show_motion = s.debug_view == BbSettings::DebugMotion;
-    if (ImGui::Checkbox("Показать векторы движения (отладка)", &show_motion)) {
+    if (ImGui::Checkbox("显示运动矢量 (调试)", &show_motion)) {
         s.debug_view = show_motion ? BbSettings::DebugMotion : BbSettings::DebugNone;
     }
-    Hint("Красный/зелёный: движение по горизонтали/вертикали (8 пикселей = полная яркость). "
-         "Синий: пиксель получил точный вектор объекта, а не только движение камеры. "
-         "Движущийся предмет без синего и без красного/зелёного апскейлер считает "
-         "неподвижным, отсюда шлейф.");
+    Hint("红/绿:水平/垂直方向的运动 (8 像素 = 满亮度)。"
+         "蓝:该像素取到了精确的物体矢量,而不只是相机运动。"
+         "运动物体若既没有蓝色也没有红/绿色,超分器会将其视为"
+         "静止,因而产生拖影。");
     ImGui::EndDisabled(); // upscaler off
 
-    ImGui::SeparatorText("Разрешение вывода");
+    ImGui::SeparatorText("输出分辨率");
     static const char* outputs[] = {"1280 x 720", "1920 x 1080", "2560 x 1440", "3840 x 2160"};
     int output = s.output_res;
-    if (ImGui::BeginCombo("Разрешение вывода", outputs[output])) {
+    if (ImGui::BeginCombo("输出分辨率", outputs[output])) {
         for (int i = 0; i < BbSettings::OutputCount; ++i) {
             if (ImGui::Selectable(outputs[i], i == output)) {
                 Store(s.output_res, i, true);
@@ -321,16 +321,16 @@ void Menu() {
         ImGui::EndCombo();
     }
     if (BbSettings::FixedRenderSession()) {
-        Hint("Размер готового кадра и интерфейса. Пресет задаёт размер сцены относительно "
-             "вывода: 4K Performance = 1920x1080. Применяется после перезапуска игры.");
+        Hint("最终画面和界面的大小。预设决定场景相对输出的大小: "
+             "4K Performance = 1920x1080。重启游戏后生效。");
     } else {
-        Hint("Размер готового кадра и интерфейса меняется на границе следующего кадра. "
-             "Пресет задаёт размер сцены относительно вывода: 4K Performance = 1920x1080. "
-             "Смена размера сбрасывает историю FSR и может вызвать короткую паузу.");
+        Hint("最终画面和界面的大小会在下一帧边界即时改变。"
+             "预设决定场景相对输出的大小:4K Performance = 1920x1080。"
+             "更改尺寸会清空 FSR 历史,可能造成短暂卡顿。");
     }
-    static const char* live_modes[] = {"Авто (по видеокарте)", "Выключена (быстрее)", "Включена"};
+    static const char* live_modes[] = {"自动 (按显卡判断)", "关闭 (更快)", "开启"};
     int live = s.live_resolution + 1;
-    if (ImGui::BeginCombo("Смена разрешения на лету", live_modes[live])) {
+    if (ImGui::BeginCombo("实时切换分辨率", live_modes[live])) {
         for (int i = 0; i < 3; ++i) {
             if (ImGui::Selectable(live_modes[i], i == live)) {
                 Store(s.live_resolution, i - 1, true);
@@ -338,18 +338,18 @@ void Menu() {
         }
         ImGui::EndCombo();
     }
-    Hint("Включена: разрешение вывода и пресет меняются без перезапуска, но постобработка игры "
-         "остаётся в 1080p — на Steam Deck и старых видеокартах это заметно медленнее. "
-         "Выключена: всё рисуется в разрешении пресета, смена — через перезапуск. Авто включает "
-         "её на мощных дискретных видеокартах. Применяется после перезапуска игры.");
-    ImGui::SeparatorText("Эффекты игры (после перезапуска)");
-    static const char* lods[] = {"Максимальная (-2)", "Как в игре", "Ниже (1)", "Минимальная (2)"};
+    Hint("开启:输出分辨率和预设免重启切换,但游戏后处理"
+         "仍保持 1080p——在 Steam Deck 和老显卡上明显更慢。"
+         "关闭:一切按预设分辨率渲染,切换需重启。自动会"
+         "在高性能独立显卡上开启。重启游戏后生效。");
+    ImGui::SeparatorText("游戏特效 (重启后生效)");
+    static const char* lods[] = {"最高 (-2)", "与原版一致", "较低 (1)", "最低 (2)"};
     static constexpr int lod_values[] = {-2, 0, 1, 2};
     int lod_index = 1;
     for (int i = 0; i < 4; ++i) {
         if (lod_values[i] == s.model_lod) lod_index = i;
     }
-    if (ImGui::BeginCombo("Детализация моделей", lods[lod_index])) {
+    if (ImGui::BeginCombo("模型细节", lods[lod_index])) {
         for (int i = 0; i < 4; ++i) {
             if (ImGui::Selectable(lods[i], i == lod_index)) {
                 Store(s.model_lod, lod_values[i], true);
@@ -360,11 +360,11 @@ void Menu() {
     for (int e = 0; e < BbSettings::EffectCount; ++e) {
         Checkbox(BbSettings::Effects[e].label, s.effects[e]);
     }
-    Hint("Эффекты включаются и выключаются патчами игры при запуске (patches/Bloodborne.xml). "
-         "Размытие в движении и тени от динамических источников заметно нагружают GPU.");
-    Hint("Свободная камера: удерживайте Cross и нажимайте L3 (клавиатура: Space + Z). "
-         "Debug menu: левый touchpad / Tab. Нужны DbgFont14h.ccm и DbgFont14h.tpf "
-         "в dvdroot_ps4/font из мода Nexus #253. Правый touchpad: Backspace.");
+    Hint("特效通过启动时的游戏补丁开关 (patches/Bloodborne.xml)。"
+         "运动模糊和动态光源阴影会明显增加 GPU 负载。");
+    Hint("自由相机:按住 Cross 再按 L3 (键盘:Space + Z)。"
+         "Debug menu:左触摸板 / Tab。需要 DbgFont14h.ccm 和 DbgFont14h.tpf "
+         "(来自 mod Nexus #253),放入 dvdroot_ps4/font。右触摸板:Backspace。");
 
     bool restart = s.object_motion != s.startup_object_motion ||
                    s.model_lod != s.startup_model_lod ||
@@ -375,22 +375,22 @@ void Menu() {
     }
     if (restart) {
         ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.3f, 1.0f),
-                           "Изменения применятся после перезапуска игры");
-        if (ImGui::Button("Применить и перезапустить игру")) {
+                           "更改将在重启游戏后生效");
+        if (ImGui::Button("应用并重启游戏")) {
             BbSettings::Save();
             runtime_restart();
         }
     }
 
-    ImGui::SeparatorText("Прочее");
-    Checkbox("Счётчик FPS в углу", s.show_fps);
+    ImGui::SeparatorText("其他");
+    Checkbox("角落显示 FPS", s.show_fps);
 
     ImGui::Spacing();
-    if (ImGui::Button("Закрыть")) {
+    if (ImGui::Button("关闭")) {
         keep_open = false;
     }
     ImGui::SameLine();
-    ImGui::TextDisabled("Настройки сохраняются в bbport.ini");
+    ImGui::TextDisabled("设置保存在 bbport.ini");
     ImGui::End();
     if (!keep_open) {
         SetOpen(false);
@@ -416,8 +416,8 @@ void TextEntryBox() {
     ImGui::Text("%s_", text_entry_text.c_str());
     ImGui::SetWindowFontScale(1.0f);
     ImGui::Separator();
-    ImGui::TextDisabled("Keyboard: type, Backspace to erase, Enter = OK, Esc = cancel");
-    ImGui::TextDisabled("Controller: Cross (A) = OK, Circle (B) = cancel");
+    ImGui::TextDisabled("键盘:直接输入,Backspace 删除,Enter 确认,Esc 取消");
+    ImGui::TextDisabled("手柄:Cross (A) 确认,Circle (B) 取消");
     ImGui::End();
 }
 
@@ -433,7 +433,7 @@ void FpsCounter() {
                      ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoNav |
                      ImGuiWindowFlags_NoFocusOnAppearing);
     const auto& s = BbSettings::Get();
-    ImGui::Text("%.0f FPS  %.1f мс  %s", frame_ms_avg > 0.0f ? 1000.0f / frame_ms_avg : 0.0f,
+    ImGui::Text("%.0f FPS  %.1f 毫秒  %s", frame_ms_avg > 0.0f ? 1000.0f / frame_ms_avg : 0.0f,
                 frame_ms_avg,
                 s.upscaler == BbSettings::UpscalerFsr3   ? "FSR 3.1"
                 : s.upscaler == BbSettings::UpscalerFsr4 ? "FSR 4"

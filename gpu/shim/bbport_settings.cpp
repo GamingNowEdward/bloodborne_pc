@@ -137,7 +137,7 @@ void ConfigureUpscalerSupport(bool fsr4, bool fsr411) {
     const int requested = v.upscaler;
     if ((requested == UpscalerFsr4 && !v.fsr4_supported) ||
         (requested == UpscalerFsr411 && !v.fsr411_supported)) {
-        v.fsr4_problem = "GPU does not support the selected FSR 4 shaders; using FSR 3.1";
+        v.fsr4_problem = "显卡不支持所选的 FSR 4 着色器;已改用 FSR 3.1";
         std::printf("Upscaler: %s unsupported on this GPU; falling back to FSR 3.1 before the first frame\n",
                     UpscalerName(requested));
         v.upscaler = UpscalerFsr3;
@@ -185,7 +185,7 @@ void Save() {
         return;
     }
     std::fprintf(file,
-                 "# bbport settings (in-game menu: Insert / L3+R3)\n"
+                 "# bbport 设置 (游戏内菜单:Insert / L3+R3)\n"
                  "upscaler=%s\npreset=%d\nsharpen=%d\nsharpness=%.2f\njitter=%d\n"
                  "reactive=%d\nobject_motion=%d\nreactive_scale=%.2f\nreactive_threshold=%.2f\nreactive_max=%.2f\n"
                  "debug_view=%d\nshow_fps=%d\nfsr4_auto_exposure=%d\nfsr4_invert_jitter=%d\n",
@@ -213,8 +213,8 @@ float PresetScale(int preset) {
 }
 
 const char* PresetName(int preset) {
-    static constexpr const char* names[PresetCount] = {"Native AA", "Quality", "Balanced",
-                                                       "Performance", "Ultra Performance"};
+    static constexpr const char* names[PresetCount] = {"原生 AA", "质量", "均衡",
+                                                       "性能", "超高性能"};
     return names[std::clamp(preset, 0, PresetCount - 1)];
 }
 
